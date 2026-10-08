@@ -1,0 +1,5 @@
+/workspaces/sistema_recomendacao_produtos_baseado_grafo/MegaStore/target/debug/deps/estoque-4a68a4cad37c91e3.d: /workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs
+
+/workspaces/sistema_recomendacao_produtos_baseado_grafo/MegaStore/target/debug/deps/libestoque-4a68a4cad37c91e3.rmeta: /workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs
+
+/workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs:

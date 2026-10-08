@@ -1,0 +1,7 @@
+/workspaces/sistema_recomendacao_produtos_baseado_grafo/MegaStore/target/debug/deps/estoque-4e169e2583f7d016.d: /workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs
+
+/workspaces/sistema_recomendacao_produtos_baseado_grafo/MegaStore/target/debug/deps/libestoque-4e169e2583f7d016.rlib: /workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs
+
+/workspaces/sistema_recomendacao_produtos_baseado_grafo/MegaStore/target/debug/deps/libestoque-4e169e2583f7d016.rmeta: /workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs
+
+/workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs:
