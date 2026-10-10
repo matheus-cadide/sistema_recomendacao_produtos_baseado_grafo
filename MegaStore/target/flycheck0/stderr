@@ -1,2 +1,2 @@
-    Checking estoque v0.1.0 (/workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque)
-error: could not compile `estoque` (lib) due to 1 previous error
+    Checking MegaStore v0.1.0 (/workspaces/sistema_recomendacao_produtos_baseado_grafo/MegaStore)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
