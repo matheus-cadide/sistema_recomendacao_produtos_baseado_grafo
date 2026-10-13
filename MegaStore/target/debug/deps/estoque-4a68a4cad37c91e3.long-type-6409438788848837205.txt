@@ -1,0 +1,1 @@
+Result<MappedRows<'_, {closure@/workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs:52:61: 52:68}>, rusqlite::Error>

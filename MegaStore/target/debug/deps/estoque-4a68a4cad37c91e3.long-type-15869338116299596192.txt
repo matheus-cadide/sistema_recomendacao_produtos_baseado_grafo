@@ -1,0 +1,1 @@
+Option<MappedRows<'_, {closure@/workspaces/sistema_recomendacao_produtos_baseado_grafo/estoque/src/lib.rs:65:61: 65:68}>>

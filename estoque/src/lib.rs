@@ -1,4 +1,4 @@
-use rusqlite::{Connection, params};
+use rusqlite::{Connection, params, OptionalExtension};
 
 
 
@@ -45,28 +45,42 @@ pub fn visualizar_produtos() -> rusqlite::Result<()> {
     Ok(())
 }
 
-pub fn procurar_produto_codigo(codigo_produto: &str) -> rusqlite::Result<()> {
+pub fn procurar_produto_codigo(codigo_produto: &str) -> rusqlite::Result<Option<(String, String, f64)>> {
+    
     let conexao = conectar_banco()?;
-    let mut stmt = conexao.prepare("select nome_produto, codigo_produto, preco_produto from tbl_estoque where codigo_produto = ?")?;
 
-    let produtos = stmt.query_map(params![codigo_produto], |linha| {
-        Ok((
-            linha.get::<_, String>(0)?,
-            linha.get::<_, String>(1)?,
-            linha.get::<_, f64>(2)?,
-        ))
-    })?;
+    let mut stmt = conexao.prepare(
+        "SELECT nome_produto, codigo_produto, preco_produto
+         FROM tbl_estoque
+         WHERE codigo_produto = ?"
+    )?;
 
-    let mut encontrou = false;
-    for produto in produtos {
-        let (nome, codigo, preco) = produto?;
-        println!("Nome: {nome}, Código: {codigo}, Preço: {preco}");
-        encontrou = true;
+    let resultado = stmt.query_row(
+        params![codigo_produto],
+        |linha| {
+            Ok((
+                linha.get::<_, String>(0)?,
+                linha.get::<_, String>(1)?,
+                linha.get::<_, f64>(2)?,
+            ))
+        }
+    ).optional();
+
+    match resultado {
+        Ok(Some(produto)) => {
+            Ok(Some(produto))
+        }
+
+        Ok(None) => {
+            println!("Produto não encontrado.");
+            Ok(None)
+        }
+
+        Err(erro) => {
+            Err(erro)
+        }
     }
 
-    if !encontrou {
-        println!("Produto não encontrado.");
-    }
-
-    Ok(())
 }
+
+
