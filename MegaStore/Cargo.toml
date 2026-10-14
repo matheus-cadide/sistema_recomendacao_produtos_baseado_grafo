@@ -4,5 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-estoque = { path = "../estoque" }
+
 rusqlite = { version = "0.32", features = ["bundled"] }
+
+[lib]
+name = "mega_store"
+path = "src/lib.rs"

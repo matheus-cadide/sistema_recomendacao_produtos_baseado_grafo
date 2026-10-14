@@ -1,0 +1,1 @@
+/workspaces/sistema_recomendacao_produtos_baseado_grafo/MegaStore/target/debug/libmega_store.rlib: /workspaces/sistema_recomendacao_produtos_baseado_grafo/MegaStore/src/lib.rs

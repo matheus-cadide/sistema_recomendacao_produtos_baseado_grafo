@@ -1,0 +1,142 @@
+use rusqlite::{Connection, params, OptionalExtension};
+use std::collections::{HashMap, HashSet, VecDeque};
+
+
+pub fn recomendar_produtos(
+    grafo: &HashMap<String, Vec<String>>,
+    codigo_inicial: &str,
+) -> Vec<String> {
+    let mut fila: VecDeque<(String, usize)> = VecDeque::new();
+    let mut visitados: HashSet<String> = HashSet::new();
+    let mut recomendacoes: Vec<String> = Vec::new();
+
+    // O produto inicial já foi visitado
+    visitados.insert(codigo_inicial.to_string());
+
+    // O segundo elemento da tupla representa a distância
+    fila.push_back((codigo_inicial.to_string(), 0));
+
+    // Limita a busca a duas conexões de distância
+    let distancia_maxima = 2;
+
+    while let Some((codigo_atual, distancia)) = fila.pop_front() {
+        // Não expande os vértices que chegaram ao limite
+        if distancia >= distancia_maxima {
+            continue;
+        }
+
+        if let Some(vizinhos) = grafo.get(&codigo_atual) {
+            for vizinho in vizinhos {
+                // Só processa produtos ainda não visitados
+                if visitados.insert(vizinho.clone()) {
+                    recomendacoes.push(vizinho.clone());
+
+                    fila.push_back((
+                        vizinho.clone(),
+                        distancia + 1,
+                    ));
+                }
+            }
+        }
+    }
+
+    recomendacoes
+}
+
+//fazer conexão com o banco de dados
+
+pub fn conectar_banco() -> rusqlite::Result<Connection>{
+    let conexao = Connection ::open("estoque.db")?;    
+    
+    Ok(conexao)
+}
+
+//criar tabela de produtos
+pub fn criar_tbl_produtos() -> rusqlite::Result<()> {
+    let conexao = conectar_banco()?;
+    conexao.execute("create table if not exists tbl_estoque(
+                        id integer primary key autoincrement,
+                        nome_produto varchar not null,
+                        codigo_produto varchar not null unique,
+                        preco_produto real not null
+                        )", [])?;
+    Ok(())
+    
+    
+}
+
+//cadastrar produtos
+
+
+pub fn cadastrar_produtos(nome_produto: &str, codigo_produto: &str, preco_produto: f64) -> rusqlite::Result<()>{
+    let conexao = conectar_banco()?;
+    conexao.execute("insert into tbl_estoque (nome_produto, codigo_produto, preco_produto) values(?, ?, ?)", params![nome_produto, codigo_produto,  preco_produto,])?;
+
+    Ok(())
+}
+
+//visualizar produtos cadastrados
+
+pub fn visualizar_produtos() -> rusqlite::Result<()> {
+    let conexao = conectar_banco()?;
+    let mut stmt =conexao.prepare("select nome_produto, codigo_produto, preco_produto from tbl_estoque")?;
+    // Executa a consulta e obtém os resultados
+    let produtos = stmt.query_map([], |linha| {
+        Ok((
+            linha.get::<_, String>(0)?,
+            linha.get::<_, String>(1)?,
+            linha.get::<_, f64>(2)?,
+            
+        ))
+    })?;
+
+    // Itera sobre os resultados e imprime os produtos
+    for produto in produtos {
+        let (nome,codigo, preco) = produto?;
+        println!("Nome: {nome}, Código: {codigo}, Preço: {preco}");
+    }
+    Ok(())
+}
+
+//procurar produto pelo código
+
+pub fn procurar_produto_codigo(codigo_produto: &str) -> rusqlite::Result<Option<(String, String, f64)>> {
+    
+    let conexao = conectar_banco()?;
+    //Consulta SQL para buscar o produto pelo código
+    let mut stmt = conexao.prepare(
+        "SELECT nome_produto, codigo_produto, preco_produto
+         FROM tbl_estoque
+         WHERE codigo_produto = ?"
+    )?;
+    // Executa a consulta e obtém o resultado
+    let resultado = stmt.query_row(
+        params![codigo_produto],
+        |linha| {
+            Ok((
+                linha.get::<_, String>(0)?,
+                linha.get::<_, String>(1)?,
+                linha.get::<_, f64>(2)?,
+            ))
+        }
+    ).optional();
+
+    // Retorna o resultado da consulta
+
+    match resultado {
+        Ok(Some(produto)) => {
+            Ok(Some(produto))
+        }
+
+        Ok(None) => {
+            println!("Produto não encontrado.");
+            Ok(None)
+        }
+
+        Err(erro) => {
+            Err(erro)
+        }
+    }
+
+}
+

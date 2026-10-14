@@ -1,4 +1,4 @@
-use estoque::{cadastrar_produtos, criar_tbl_produtos, visualizar_produtos, procurar_produto_codigo};
+use mega_store::{cadastrar_produtos, criar_tbl_produtos, visualizar_produtos, procurar_produto_codigo, recomendar_produtos};
 use std::io;
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -48,10 +48,12 @@ fn main() -> rusqlite::Result<()> {
             "2" => {
                 loop {
                     match visualizar_produtos() {
-                    Ok(_) => println!(""),
-                    Err(erro) => println!("Erro ao visualizar produtos: {}", erro),
-                
-                    }
+
+                        Ok(_) => println!("======================================"),
+                        
+                        Err(erro) => println!("Erro ao visualizar produtos: {}", erro),
+                            
+                        }
                 
 
                     println!("Pressione Enter para sair da visualização de produtos.");
@@ -95,13 +97,17 @@ fn main() -> rusqlite::Result<()> {
                             println!("Nome: {}", nome);
                             println!("Código: {}", codigo);
                             println!("Preço: {}", preco);
+
+                            println!("=====================================");
                         }
                         Ok(None) => {
-                            println!("Produto não encontrado.");
-                            break;
+                            println!("");
+                            println!("======================================");
+                            
                         }
                         Err(erro) => {
                             println!("Erro ao procurar produto: {}", erro);
+                            println!("=====================================");
                         }
                         
                     }
@@ -149,30 +155,43 @@ fn main() -> rusqlite::Result<()> {
             "4" => {
                 loop {
                 println!("Fazer conexão de produtos");
-
+                println!("=====================================");
+                
                 println!("Digite o código do primeiro produto:");
                 let codigo = ler_input();
-
+                println!("=====================================");
+                
                 println!("Digite o código do produto a ser conectado:");
                 let codigo_conectar = ler_input();
-
+                println!("=====================================");
+                
+                //procurando produto pelo código de barras e conectando produtos
+                
+                //procurando o primeiro produto pelo código de barras
                 match procurar_produto_codigo(&codigo) {
+
                     Ok(Some((nome, codigo_origem, _))) => {
+                        
+                        //procurando o segundo produto pelo código de barras se encontrou o primeiro produto
                         match procurar_produto_codigo(&codigo_conectar) {
+                            
                             Ok(Some((nome_conectar, codigo_destino, _))) => {
+                            
                                 if codigo_origem == codigo_destino {
                                     println!("Não é possível conectar um produto a ele mesmo.");
+                                    println!("=====================================");
+                                
                                 } else {
+
                                     // Cria ou recupera a lista de vizinhos
-                                    let vizinhos_origem =
-                                        grafo.entry(codigo_origem.clone()).or_default();
+                                    
+                                    let vizinhos_origem = grafo.entry(codigo_origem.clone()).or_default();
 
                                     if !vizinhos_origem.contains(&codigo_destino) {
                                         vizinhos_origem.push(codigo_destino.clone());
 
                                         // Cria a conexão no sentido inverso
-                                        let vizinhos_destino =
-                                            grafo.entry(codigo_destino.clone()).or_default();
+                                        let vizinhos_destino = grafo.entry(codigo_destino.clone()).or_default();
 
                                         vizinhos_destino.push(codigo_origem.clone());
 
@@ -180,36 +199,56 @@ fn main() -> rusqlite::Result<()> {
                                             "{} conectado a {}!",
                                             nome, nome_conectar
                                         );
+                                        println!("=====================================");
                                     } else {
                                         println!("Essa conexão já existe.");
+                                        println!("=====================================");
                                     }
                                 }
                             }
                             Ok(None) => {
                                 println!("Segundo produto não encontrado.");
+                                println!("=====================================");
                             }
                             Err(erro) => {
                                 println!("Erro ao procurar segundo produto: {erro}");
+                                println!("=====================================");
                             }
                         }
                     }
                     Ok(None) => {
                         println!("Primeiro produto não encontrado.");
+                        println!("=====================================");
                     }
                     Err(erro) => {
                         println!("Erro ao procurar primeiro produto: {erro}");
+                        println!("=====================================");
                     }
                 }
+
+
+                //Continuar ou encerrar conexões de produtos
+
 
                 println!("Fazer outra conexão? (s/n)");
 
                 let resposta = ler_input();
-
+                
+                
                 match resposta.trim() {
-                    "s" => continue,
-                    "n" => break,
+                    "s" => {
+                        println!("=====================================");
+                        println!("Fazendo outra conexão de produtos.");
+                        println!("=====================================");
+                    }
+                    "n" => {
+                        println!("Encerrando conexões.");
+                        println!("=====================================");
+                        break;
+                    }
                     _ => {
                         println!("Opção inválida. Encerrando conexões.");
+                        println!("=====================================");
                         break;
                     }
                 }
@@ -220,6 +259,7 @@ fn main() -> rusqlite::Result<()> {
 
 
             "5" => {
+                println!("=====================================");
                 println!("Recomendações de produtos");
                 println!("Digite o código do produto:");
                 
@@ -300,44 +340,3 @@ fn ler_input() -> String {
     input.trim().to_string()
 }
 
-
-fn recomendar_produtos(
-    grafo: &HashMap<String, Vec<String>>,
-    codigo_inicial: &str,
-) -> Vec<String> {
-    let mut fila: VecDeque<(String, usize)> = VecDeque::new();
-    let mut visitados: HashSet<String> = HashSet::new();
-    let mut recomendacoes: Vec<String> = Vec::new();
-
-    // O produto inicial já foi visitado
-    visitados.insert(codigo_inicial.to_string());
-
-    // O segundo elemento da tupla representa a distância
-    fila.push_back((codigo_inicial.to_string(), 0));
-
-    // Limita a busca a duas conexões de distância
-    let distancia_maxima = 2;
-
-    while let Some((codigo_atual, distancia)) = fila.pop_front() {
-        // Não expande os vértices que chegaram ao limite
-        if distancia >= distancia_maxima {
-            continue;
-        }
-
-        if let Some(vizinhos) = grafo.get(&codigo_atual) {
-            for vizinho in vizinhos {
-                // Só processa produtos ainda não visitados
-                if visitados.insert(vizinho.clone()) {
-                    recomendacoes.push(vizinho.clone());
-
-                    fila.push_back((
-                        vizinho.clone(),
-                        distancia + 1,
-                    ));
-                }
-            }
-        }
-    }
-
-    recomendacoes
-}
