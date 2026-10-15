@@ -140,3 +140,103 @@ pub fn procurar_produto_codigo(codigo_produto: &str) -> rusqlite::Result<Option<
 
 }
 
+pub fn remover_produto(codigo_produto: &str) -> rusqlite::Result<()> {
+    let conexao = conectar_banco()?;
+
+    let resultado = conexao.execute(
+        "DELETE FROM tbl_estoque WHERE codigo_produto = ?",
+        params![codigo_produto],
+    )?;
+
+    match resultado {
+        0 => {
+            println!("Produto não encontrado.");
+        }
+        _ => {
+            println!("Produto removido com sucesso.");
+        }
+    }
+
+    Ok(())
+}
+
+// Banco de dados para testes
+pub struct Estoque {
+    conexao: Connection,
+}
+
+impl Estoque {
+    // Abre o banco real do programa.
+    pub fn abrir() -> rusqlite::Result<Self> {
+        let conexao = Connection::open("estoque.db")?;
+        Ok(Self { conexao })
+    }
+
+    // Cria um banco exclusivo em memória para os testes.
+    pub fn em_memoria() -> rusqlite::Result<Self> {
+        let conexao = Connection::open_in_memory()?;
+        let estoque = Self { conexao };
+        estoque.criar_tabela()?;
+        Ok(estoque)
+    }
+
+    pub fn criar_tabela(&self) -> rusqlite::Result<()> {
+        self.conexao.execute(
+            "CREATE TABLE IF NOT EXISTS tbl_estoque (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome_produto TEXT NOT NULL,
+                codigo_produto TEXT NOT NULL UNIQUE,
+                preco_produto REAL NOT NULL
+            )",
+            [],
+        )?;
+
+        Ok(())
+    }
+
+    pub fn cadastrar_produtos(
+        &self,
+        nome: &str,
+        codigo: &str,
+        preco: f64,
+    ) -> rusqlite::Result<()> {
+        self.conexao.execute(
+            "INSERT INTO tbl_estoque
+             (nome_produto, codigo_produto, preco_produto)
+             VALUES (?, ?, ?)",
+            params![nome, codigo, preco],
+        )?;
+
+        Ok(())
+    }
+
+    pub fn procurar_produto_codigo(
+        &self,
+        codigo: &str,
+    ) -> rusqlite::Result<Option<(String, String, f64)>> {
+        self.conexao
+            .query_row(
+                "SELECT nome_produto, codigo_produto, preco_produto
+                 FROM tbl_estoque
+                 WHERE codigo_produto = ?",
+                params![codigo],
+                |linha| {
+                    Ok((
+                        linha.get(0)?,
+                        linha.get(1)?,
+                        linha.get(2)?,
+                    ))
+                },
+            )
+            .optional()
+    }
+
+    pub fn remover_produto(&self, codigo: &str) -> rusqlite::Result<bool> {
+        let quantidade = self.conexao.execute(
+            "DELETE FROM tbl_estoque WHERE codigo_produto = ?",
+            params![codigo],
+        )?;
+
+        Ok(quantidade > 0)
+    }
+}
