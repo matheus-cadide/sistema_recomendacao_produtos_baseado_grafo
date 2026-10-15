@@ -10,3 +10,7 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 [lib]
 name = "mega_store"
 path = "src/lib.rs"
+
+[[bench]]
+name = "bfs"
+harness = false

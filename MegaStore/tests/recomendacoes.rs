@@ -1,4 +1,4 @@
-use mega_store::recomendar_produtos;
+use mega_store::{recomendar_produtos, Estoque};
 use std::collections::HashMap;
 
 #[test]
@@ -78,4 +78,43 @@ fn respeita_limite_de_duas_conexoes() {
     assert!(resultado.contains(&"200".to_string()));
     assert!(resultado.contains(&"300".to_string()));
     assert!(!resultado.contains(&"400".to_string()));
+}
+
+#[test]
+fn cadastro_de_produtos_e_recomendacoes() {
+    let estoque = Estoque::em_memoria().unwrap();
+
+    estoque
+        .cadastrar_produtos("Fone", "100", 50.0)
+        .unwrap();
+
+    estoque
+        .cadastrar_produtos("Mouse", "200", 80.0)
+        .unwrap();
+
+    // Confirma que os produtos foram cadastrados.
+    assert!(
+        estoque.procurar_produto_codigo("100").unwrap().is_some()
+    );
+
+    assert!(
+        estoque.procurar_produto_codigo("200").unwrap().is_some()
+    );
+
+    // Simula a conexão entre os códigos cadastrados.
+    let mut grafo: HashMap<String, Vec<String>> = HashMap::new();
+
+    grafo
+        .entry("100".to_string())
+        .or_default()
+        .push("200".to_string());
+
+    grafo
+        .entry("200".to_string())
+        .or_default()
+        .push("100".to_string());
+
+    let recomendacoes = recomendar_produtos(&grafo, "100");
+
+    assert_eq!(recomendacoes, vec!["200".to_string()]);
 }

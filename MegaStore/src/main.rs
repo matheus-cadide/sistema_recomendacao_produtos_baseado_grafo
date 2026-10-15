@@ -1,6 +1,6 @@
 use mega_store::{cadastrar_produtos, criar_tbl_produtos, visualizar_produtos, procurar_produto_codigo, recomendar_produtos};
 use std::io;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap};
 
 fn main() -> rusqlite::Result<()> {
     
